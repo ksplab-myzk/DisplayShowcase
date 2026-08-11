@@ -1,0 +1,18 @@
+{
+    "logo": {
+        "path": "kda-logo2.jpg",
+        "x": 1400,
+        "y": 900,
+        "width": 500,
+        "height": 150
+    },
+
+    "text": {
+        "content": "生徒さんの作品集",
+        "x": 100,
+        "y": 80,
+        "font": "C:/Windows/Fonts/meiryo.ttc",
+        "size": 48,
+        "color": [255, 240, 180]
+    }
+}
