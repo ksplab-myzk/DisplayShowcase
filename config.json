@@ -1,18 +1,38 @@
 {
     "logo": {
         "path": "kda-logo2.jpg",
-        "x": 1400,
+        "x": 1500,
         "y": 900,
-        "width": 500,
-        "height": 150
+        "width": 400,
+        "height": 120,
+        "alpha": 128
     },
 
     "text": {
-        "content": "生徒さんの作品集",
+        "content": "Welcome to 子どもデザインアカデミー ",
         "x": 100,
-        "y": 80,
+        "y": 50,
         "font": "C:/Windows/Fonts/meiryo.ttc",
         "size": 48,
-        "color": [255, 240, 180]
-    }
+        "color": [255, 240, 100]
+    },
+
+    "front_max_ratio": {
+        "width": 0.70,
+        "height": 0.70
+    },
+
+    "rotation": {
+    "speed_deg": 2
+    },
+
+    "display": {
+    "monitor": 1,
+    "width": 1920,
+    "height": 1080
+    },
+
+    "front_lift_ratio": 0.15,
+    "small_base_px": 400
 }
+
