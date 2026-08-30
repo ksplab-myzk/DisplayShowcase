@@ -21,6 +21,7 @@ text_cfg = config["text"]
 front_ratio = config["front_max_ratio"]
 FRONT_LIFT = config["front_lift_ratio"]
 SMALL_BASE = config["small_base_px"]
+title_flow_cfg = config["title_flow"]   # ★追加：タイトル流し込み設定
 
 pygame.init()
 
@@ -29,7 +30,6 @@ disp_cfg = config["display"]
 if disp_cfg["monitor"] == 0:
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
 else:
-    # 右側のモニタに表示
     x = disp_cfg["width"]
     os.environ['SDL_VIDEO_WINDOW_POS'] = f"{x},0"
 
@@ -46,7 +46,6 @@ bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
 logo_path = os.path.join(base_path, logo_cfg["path"])
 logo2 = pygame.image.load(logo_path).convert()
 logo2 = pygame.transform.smoothscale(logo2, (logo_cfg["width"], logo_cfg["height"]))
-# ★ 半透明設定（config.json の alpha）
 logo2.set_alpha(logo_cfg.get("alpha", 255))
 
 COLOR_MAP = {
@@ -79,7 +78,7 @@ with open(csv_path, encoding="utf-8-sig") as f:
             "small": small,
             "title": title,
             "color": color_key,
-            "state": "small",       # small / expanding / front / shrinking
+            "state": "small",
             "scale": 1.0,
             "y_offset": 0.0
         })
@@ -90,7 +89,7 @@ radius = int(min(WIDTH, HEIGHT) * 0.75)
 vertical_offset = int(HEIGHT * 0.20)
 
 offset_angle = 0.0
-rotation_cfg = config["rotation"]   # 回転速度(角度/s)
+rotation_cfg = config["rotation"]
 rotate_speed = math.radians(rotation_cfg["speed_deg"])
 
 font = pygame.font.Font(text_cfg["font"], text_cfg["size"])
@@ -98,9 +97,13 @@ font = pygame.font.Font(text_cfg["font"], text_cfg["size"])
 last_input_time = pygame.time.get_ticks()
 auto_rotate_delay = 5000
 
-# 正面画像の最大サイズ（configで調整可能）
 MAX_W = WIDTH * front_ratio["width"]
 MAX_H = HEIGHT * front_ratio["height"]
+
+# ★追加：タイトル流し込み用変数
+title_x = WIDTH
+title_state = "moving"
+current_front_title = ""
 
 running = True
 while running:
@@ -118,26 +121,19 @@ while running:
         offset_angle += rotate_speed
         last_input_time = pygame.time.get_ticks()
 
-    # 自動回転
     if pygame.time.get_ticks() - last_input_time > auto_rotate_delay:
         offset_angle += rotate_speed * 0.1
 
-    # 背景
     screen.blit(bg, (0, 0))
 
-    # 黒レイヤー
     dark_overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     dark_overlay.fill((0, 0, 0, 180))
     screen.blit(dark_overlay, (0, 0))
 
-    # ロゴ描画
     screen.blit(logo2, (logo_cfg["x"], logo_cfg["y"]))
 
     n = len(image_info)
 
-    # ----------------------------------------------------
-    # ★ 正面画像を「depth 最大の 1 枚だけ」選ぶ
-    # ----------------------------------------------------
     depths = []
     angles = []
 
@@ -150,7 +146,13 @@ while running:
 
     front_index = depths.index(max(depths))
 
-    # 描画リスト
+    # ★追加：正面タイトル変更チェック
+    new_front_title = image_info[front_index]["title"]
+    if new_front_title != current_front_title:
+        current_front_title = new_front_title
+        title_state = "moving"
+        title_x = WIDTH   # 右端から再スタート
+
     draw_list = []
 
     for i, info in enumerate(image_info):
@@ -164,27 +166,15 @@ while running:
 
         is_front = (i == front_index)
 
-        # -----------------------------
-        # ★ 状態遷移
-        # -----------------------------
         if is_front:
             if info["state"] == "small":
                 info["state"] = "expanding"
-            elif info["state"] == "expanding":
-                pass
-            elif info["state"] == "front":
-                pass
         else:
             if info["state"] == "front":
                 info["state"] = "shrinking"
-            elif info["state"] == "shrinking":
-                pass
             elif info["state"] == "expanding":
                 info["state"] = "shrinking"
 
-        # -----------------------------
-        # ★ スケール制御（滑らか拡大・縮小）
-        # -----------------------------
         small_w, small_h = small.get_size()
         orig_w, orig_h = orig.get_size()
 
@@ -212,44 +202,31 @@ while running:
         elif info["state"] == "small":
             info["scale"] = small_scale_target
 
-        # -----------------------------
-        # ★ Y位置補正（正面時に上へ持ち上げる）
-        # -----------------------------
         target_offset = -HEIGHT * FRONT_LIFT
 
         if info["state"] == "expanding":
             info["y_offset"] += (target_offset - info["y_offset"]) * 0.1
-
         elif info["state"] == "front":
             info["y_offset"] = target_offset
-
         elif info["state"] == "shrinking":
             info["y_offset"] += (0 - info["y_offset"]) * 0.1
-
-        elif info["state"] == "small":
+        else:
             info["y_offset"] = 0
 
-        # -----------------------------
-        # ★ 画像選択（orig / small）
-        # -----------------------------
         img = orig if info["state"] in ("expanding", "front", "shrinking") else small
 
-        # 拡大
         w, h = img.get_size()
         scaled_img = pygame.transform.smoothscale(img, (int(w * info["scale"]), int(h * info["scale"])))
 
-        # 傾き補正
         tilt = abs(math.sin(angle))
         tilt_factor = 1 - tilt * 0.4
         new_w = max(1, int(scaled_img.get_width() * tilt_factor))
         new_h = scaled_img.get_height()
         scaled_img = pygame.transform.smoothscale(scaled_img, (new_w, new_h))
 
-        # 明るさ
         alpha = int(100 + depth * 155)
         scaled_img.set_alpha(alpha)
 
-        # 座標
         x = center[0] + radius * math.sin(angle)
         y = center[1] + vertical_offset * math.cos(angle)
 
@@ -257,7 +234,6 @@ while running:
 
         draw_list.append((depth, scaled_img, rect, title, color_key))
 
-    # 奥から手前へ描画
     sorted_list = sorted(draw_list, key=lambda x: x[0])
 
     for idx, (depth, img, rect, title, color_key) in enumerate(sorted_list):
@@ -268,17 +244,28 @@ while running:
         if idx == len(sorted_list) - 1:
             pygame.draw.rect(screen, frame_color, rect.inflate(10, 10), 3)
 
-    # 正面タイトル
+    # ★タイトル流し込み処理
+    target_x = WIDTH // 2
+    flow_speed = title_flow_cfg["speed"]
+
+    if title_state == "moving":
+        title_x += (target_x - title_x) * flow_speed
+        if abs(title_x - target_x) < 2:
+            title_x = target_x
+            title_state = "stopped"
+
+    # ★タイトル描画（位置は config.json の y）
     _, _, front_rect, front_title, front_color = sorted_list[-1]
     frame_color, title_color = COLOR_MAP.get(front_color, ((255,255,255),(255,255,255)))
 
+    title_surface = font.render(current_front_title, True, title_color)
+    title_rect = title_surface.get_rect(center=(title_x, title_flow_cfg["y"]))
+    screen.blit(title_surface, title_rect)
+
+    # 任意テキスト（固定）
     text_surface = font.render(text_cfg["content"], True, tuple(text_cfg["color"]))
     text_rect = text_surface.get_rect(topleft=(text_cfg["x"], text_cfg["y"]))
     screen.blit(text_surface, text_rect)
-
-    title_surface = font.render(front_title, True, title_color)
-    title_rect = title_surface.get_rect(center=(WIDTH // 2, 150))
-    screen.blit(title_surface, title_rect)
 
     pygame.display.flip()
     clock.tick(60)

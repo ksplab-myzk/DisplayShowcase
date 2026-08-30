@@ -9,12 +9,12 @@
     },
 
     "text": {
-        "content": "Welcome to 子どもデザインアカデミー ",
+        "content": "The Next Generation of Design — Kodomo Design Academy ",
         "x": 100,
         "y": 50,
         "font": "C:/Windows/Fonts/meiryo.ttc",
         "size": 48,
-        "color": [255, 240, 100]
+        "color": [255, 240, 0]
     },
 
     "front_max_ratio": {
@@ -30,6 +30,11 @@
     "monitor": 1,
     "width": 1920,
     "height": 1080
+    },
+
+    "title_flow": {
+    "y": 150,
+    "speed": 0.1
     },
 
     "front_lift_ratio": 0.15,
