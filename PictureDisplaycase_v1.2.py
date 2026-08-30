@@ -5,7 +5,7 @@ import csv
 import os
 import json
 
-base_path = "D:\\Programming\\DisplayShowcase"
+base_path = r"d:\Programming\DisplayShowcase"
 img_path = os.path.join(base_path, "images")
 csv_path = os.path.join(base_path, "images.csv")
 config_path = os.path.join(base_path, "config.json")
