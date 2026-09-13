@@ -1,11 +1,11 @@
 {
     "logo": {
-        "path": "kda-logo2.jpg",
-        "x": 1500,
-        "y": 900,
-        "width": 400,
-        "height": 120,
-        "alpha": 128
+        "path": "kda_icon.jpg",
+        "x": 1650,
+        "y": 800,
+        "width": 250,
+        "height": 250,
+        "alpha": 180
     },
 
     "text": {

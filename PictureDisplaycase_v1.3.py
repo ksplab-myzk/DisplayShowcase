@@ -4,6 +4,7 @@ import pygame
 import csv
 import os
 import json
+from pathlib import Path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from common.logger import DailyLogger
@@ -14,7 +15,7 @@ from common.logger import DailyLogger
 logger = DailyLogger(base_dir="logs", prefix="dsc_")
 logger.write("[INFO] Display Show Case Start!!")
 
-base_path = r"C:/School/01_Programming/DisplayShowcase"
+base_path = Path(__file__).resolve().parent
 img_path = os.path.join(base_path, "images")
 csv_path = os.path.join(base_path, "images.csv")
 config_path = os.path.join(base_path, "config.json")

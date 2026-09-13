@@ -13,3 +13,4 @@ images/
 
 # vs code setteing
 DisplayShowcase.code-workspace
+.vscode/settings.json
