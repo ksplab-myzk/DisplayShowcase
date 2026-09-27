@@ -11,6 +11,8 @@ logs/
 # contents
 images/
 
+old/
+
 # vs code setteing
 DisplayShowcase.code-workspace
 .vscode/settings.json

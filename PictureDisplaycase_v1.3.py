@@ -5,15 +5,26 @@ import csv
 import os
 import json
 from pathlib import Path
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from common.logger import DailyLogger
+
+
+def start_log(logger, message):
+    now = datetime.now()
+    timestamp_ms = now.strftime('%Y-%m-%d %H:%M:%S') + f'.{now.microsecond // 1000:03d}'
+
+    pid = os.getpid()
+    
+    logger.write(f"[INFO] ["+timestamp_ms+"], PID:["+str(pid)+"]" +message)
 
 # -----------------------------
 # ログ設定
 # -----------------------------
 logger = DailyLogger(base_dir="logs", prefix="dsc_")
 logger.write("[INFO] Display Show Case Start!!")
+start_log(logger, "process started")
 
 base_path = Path(__file__).resolve().parent
 img_path = os.path.join(base_path, "images")
@@ -34,6 +45,7 @@ SMALL_BASE = config["small_base_px"]
 title_flow_cfg = config["title_flow"]   # ★追加：タイトル流し込み設定
 
 pygame.init()
+start_log(logger, "pygame.init() complete")
 
 disp_cfg = config["display"]
 
@@ -124,6 +136,7 @@ title_state = "moving"
 current_front_title = ""
 
 logger.write(f"[INFO] display init complete! Start running")
+start_log(logger, "start running")
 
 running = True
 while running:
