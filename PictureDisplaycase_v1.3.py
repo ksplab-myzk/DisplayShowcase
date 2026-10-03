@@ -19,6 +19,30 @@ def start_log(logger, message):
     
     logger.write(f"[INFO] ["+timestamp_ms+"], PID:["+str(pid)+"]" +message)
 
+
+def bring_window_to_front():
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        hwnd = pygame.display.get_wm_info().get("window")
+        if not hwnd:
+            return False
+
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+        user32.SetForegroundWindow.restype = wintypes.BOOL
+        return bool(user32.SetForegroundWindow(hwnd))
+
+    try:
+        from pygame._sdl2.video import Window
+
+        Window.from_display_module().focus()
+        return True
+    except (ImportError, AttributeError, pygame.error):
+        return False
+
+
 # -----------------------------
 # ログ設定
 # -----------------------------
@@ -138,6 +162,8 @@ current_front_title = ""
 logger.write(f"[INFO] display init complete! Start running")
 start_log(logger, "start running")
 
+foreground_at = pygame.time.get_ticks() + 1000
+foreground_requested = False
 running = True
 while running:
     for event in pygame.event.get():
@@ -301,6 +327,12 @@ while running:
     screen.blit(text_surface, text_rect)
 
     pygame.display.flip()
+    if not foreground_requested and pygame.time.get_ticks() >= foreground_at:
+        foreground_requested = True
+        if bring_window_to_front():
+            logger.write("[INFO] Display window brought to foreground")
+        elif sys.platform == "win32":
+            logger.write("[WARNING] Could not bring display window to foreground")
     clock.tick(60)
 
 pygame.quit()
